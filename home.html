@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>বাংলালাইভ নিউজ - হোম পেজ</title>
+    <style>
+        /* বেসিক সিএসএস ডিজাইন */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'SolaimanLipi', Arial, sans-serif; }
+        body { background-color: #f4f4f4; color: #333; }
+        .header { background-color: #fff; padding: 15px; text-align: center; border-bottom: 2px solid #ff0000; }
+        .header h1 { color: #ff0000; font-size: 28px; }
+        
+        /* নেভিগেশন মেনু */
+        .navbar { background-color: #990000; overflow: hidden; display: flex; justify-content: center; flex-wrap: wrap; }
+        .navbar a { color: white; padding: 14px 20px; text-decoration: none; text-align: center; font-weight: bold; font-size: 16px; }
+        .navbar a:hover, .navbar a.active { background-color: #cc0000; }
+
+        /* কন্টেইনার এবং নিউজ গ্রিড */
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+        .page-title { font-size: 22px; color: #990000; margin-bottom: 15px; border-left: 5px solid #990000; padding-left: 10px; }
+        .news-grid { display: flex; flex-direction: column; gap: 15px; background: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* নিউজের কার্ড স্টাইল */
+        .news-card { border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 5px; }
+        .news-card:last-child { border-bottom: none; }
+        .news-card h2 { font-size: 20px; color: #222; margin-bottom: 8px; line-height: 1.4; }
+        .news-card p { font-size: 15px; color: #555; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>সর্বশেষ সংবাদ সবার আগে</h1>
+    </div>
+
+    <!-- মেনু বার: ফাইলগুলোর নাম আপনার ফোল্ডার অনুযায়ী মিলিয়ে দেওয়া হয়েছে -->
+    <div class="navbar">
+        <a href="home.html">হোম</a>
+        <a href="national.html">জাতীয়</a>
+        <a href="politics.html">রাজনীতি</a>
+        <a href="international.html">আন্তর্জাতিক</a>
+        <a href="economy.html">অর্থনীতি</a>
+        <a href="sports.html">খেলাধুলা</a>
+        <a href="entertainment.html">বিনোদন</a>
+        <a href="technology.html">প্রযুক্তি</a>
+        <a href="more.html">আরও</a>
+    </div>
+
+    <div class="container">
+        <h2 class="page-title">প্রধান সংবাদ (সব খবর একসাথে)</h2>
+        <div id="news-grid" class="news-grid">
+            <p style="text-align:center; padding:20px; color:gray;">খবর লোড হচ্ছে...</p>
+        </div>
+    </div>
+
+    <script>
+        // গুগল শিটের JSON URL
+       const jsonUrl ='https://docs.google.com/spreadsheets/d/1gX73WskIs3D-8IcyPJ24NT0xn1KIEJSjMXOF9nCQqTg/gviz/tq?tqx=out:json';
+        // ডাটা ফেচ করার ফাংশন
+        fetch(jsonUrl)
+            .then(res => res.text())
+            .then(data => {
+                const temp = data.substring(data.indexOf('\n') + 1);
+                const jsonString = temp.substring(temp.indexOf('{'), temp.lastIndexOf('}') + 1);
+                const responseObj = JSON.parse(jsonString);
+                
+                const rows = responseObj.table.rows;
+                const newsContainer = document.getElementById('news-grid');
+                newsContainer.innerHTML = ''; // লোডিং টেক্সট মুছে ফেলা
+                
+                let hasNews = false;
+
+                rows.forEach(row => {
+                    // কলাম B = ক্যাটাগরি, কলাম C = শিরোনাম, কলাম D = বিস্তারিত বিবরণ
+                    const title = row.c && row.c[2] ? row.c[2].v : '';
+                    const summary = row.c && row.c[3] ? row.c[3].v : '';
+                    
+                    if (title || summary) {
+                        hasNews = true;
+                        const newsHTML = `
+                            <div class="news-card">
+                                <h2>${title}</h2>
+                                <p>${summary}</p>
+                            </div>
+                        `;
+                        newsContainer.insertAdjacentHTML('beforeend', newsHTML);
+                    }
+                });
+
+                if (!hasNews) {
+                    newsContainer.innerHTML = '<p style="text-align:center; padding:20px; color:gray;">আপাতত কোনো খবর পাওয়া যায়নি।</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('news-grid').innerHTML = '<p style="text-align:center; padding:20px; color:red;">খবর লোড করতে সমস্যা হয়েছে। ইন্টারনেট কানেকশন চেক করুন।</p>';
+            });
+    </script>
+</body>
+</html>

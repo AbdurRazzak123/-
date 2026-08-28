@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>রাজনৈতিক সংবাদ - বাংলা নিউজ পোর্টাল</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; line-height: 1.6; }
+        header { background-color: #003366; color: #fff; padding: 20px; text-align: center; }
+        header h1 { margin: 0; font-size: 28px; }
+        .back-btn { color: #ffcc00; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 10px; }
+        .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
+        .page-title { color: #ff6600; border-bottom: 2px solid #ff6600; padding-bottom: 10px; margin-bottom: 20px; }
+       .news-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .news-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .news-card img { width: 100%; height: 400px; object-fit: cover; }
+        .news-details { padding: 15px; }
+        .category-tag { color: #008000; font-weight: bold; font-size: 12px; display: block; margin-bottom: 5px; }
+        .news-card h3 { margin: 0 0 10px 0; font-size: 24px; color: #111; }
+        .news-card p { font-size: 16px; color: #555; margin-bottom: 15px; line-height: 1.6; }
+        .news-date { font-size: 12px; color: #888; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>বাংলা নিউজ পোর্টাল</h1>
+        <a href="index.html" class="back-btn">← মূল পাতায় ফিরে যান</a>
+    </header>
+    <div class="container">
+        <h2 class="page-title">সর্বশেষ রাজনীতি সংবাদ</h2>
+        <div id="news-container" class="news-grid"><p>খবর লোড হচ্ছে...</p></div>
+    </div>
+   <script>
+    // আপনার গুগল শিটের লিংক থেকে ডেটা আনার মেইন URL
+     const jsonUrl ='https://docs.google.com/spreadsheets/d/1gX73WskIs3D-8IcyPJ24NT0xn1KIEJSjMXOF9nCQqTg/gviz/tq?tqx=out:json';
+
+
+    // ১. ব্রাউজারের লিংক থেকে কারেন্ট পেজের নাম স্বয়ংক্রিয়ভাবে বের করা
+    const currentPage = window.location.pathname.split("/").pop().replace(".html", "").toLowerCase().trim();
+    
+    // যদি পেজের নাম index বা more হয়, তবে ডিফল্ট হিসেবে 'politics' বা অন্য কিছু সেট করা
+    const currentCategory = (currentPage === 'index' || currentPage === 'more' || currentPage === '') ? 'politics' : currentPage;
+
+    fetch(jsonUrl)
+        .then(res => res.text())
+        .then(text => {
+            // গুগল শিটের ডেটাকে জাভাস্ক্রিপ্ট অবজেক্টে রূপান্তর করা
+            const jsonData = JSON.parse(text.substring(47, text.length - 2));
+            const rows = jsonData.table.rows;
+            
+            // কলাম অনুযায়ী ডেটা সাজানো
+            const newsList = rows.map(row => {
+                return {
+                    id: row.c && row.c[0] ? row.c[0].v : '',
+                    category: row.c && row.c[1] ? row.c[1].v : '',
+                    title: row.c && row.c[2] ? row.c[2].v : '',
+                    summary: row.c && row.c[3] ? row.c[3].v : '',
+                    image: row.c && row.c[4] ? row.c[4].v : 'https://picsum.photos',
+                    date: row.c && row.c[5] ? row.c[5].v : ''
+                };
+            });
+
+            const container = document.getElementById('news-container');
+            container.innerHTML = '';
+            
+            // ২. এই পেজের ক্যাটাগরির সাথে মিল রেখে খবর ফিল্টার করা (কোনো এরর মেসেজ আসবে না)
+            const filteredNews = newsList.filter(news => news.category && news.category.toLowerCase().trim() === currentCategory);
+            
+            // যদি কোনো খবর না থাকে, তবে পেজটি সুন্দরভাবে খালি (Blank) থাকবে, কোনো কুৎসিত লেখা আসবে না
+            if(filteredNews.length === 0) { 
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#888;">নতুন খবরের অপেক্ষা করুন...</div>'; 
+                return; 
+            }
+            
+            filteredNews.reverse().forEach(news => {
+            // ১০০ লাইনের খবরকে ছোট করার ট্রিক
+            const shortSummary = news.summary && news.summary.length > 250 
+                ? news.summary.substring(0, 250) + "..." 
+                : news.summary;
+
+            container.innerHTML += `
+                <div class="news-card">
+                    <img src="${news.image}" alt="${news.title}">
+                    <div class="news-details">
+                        <span class="category-tag" style="text-transform: capitalize;">${currentCategory === 'more' ? 'রাজনীতি' : news.category}</span>
+                        <span class="news-date">${news.date}</span>
+                        <h3>${news.title}</h3>
+                        <p>${shortSummary}</p>
+                        <a href="details.html?id=${news.id}" class="read-more-btn">আরও পড়ুন</a>
+                    </div>
+                </div>
+            `;
+        });
+        })
+        .catch(err => { 
+            console.error('Error:', err);
+            document.getElementById('news-container').innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding:20px; color:red;">খবর লোড করতে সমস্যা হচ্ছে।</p>'; 
+        });
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>খেলাধুলা সংবাদ - বাংলা নিউজ পোর্টাল</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; line-height: 1.6; }
+        header { background-color: #003366; color: #fff; padding: 20px; text-align: center; }
+        header h1 { margin: 0; font-size: 28px; }
+        .back-btn { color: #ffcc00; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 10px; }
+        .container { max-width: 1300px; margin: 20px auto; padding: 0 20px; }
+        .page-title { color: #ff6600; border-bottom: 2px solid #ff6600; padding-bottom: 10px; margin-bottom: 20px; }
+        .news-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .news-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .news-card img { width: 100%; height: 400px; object-fit: cover; }
+        .news-details { padding: 15px; }
+        .category-tag { color: #008000; font-weight: bold; font-size: 12px; display: block; margin-bottom: 5px; }
+        .news-card h3 { margin: 0 0 10px 0; font-size: 24px; color: #111; }
+        .news-card p { font-size: 16px; color: #555; margin-bottom: 15px; line-height: 1.6; }
+        .news-date { font-size: 12px; color: #888; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>বাংলা নিউজ পোর্টাল</h1>
+        <a href="index.html" class="back-btn">← মূল পাতায় ফিরে যান</a>
+    </header>
+    <div class="container">
+        <h2 class="page-title">সর্বশেষ খেলাধুলা সংবাদ</h2>
+        <div id="news-container" class="news-grid"><p style="grid-column: 1/-1; text-align:center;">খবর লোড হচ্ছে...</p></div>
+    </div>
+    <script>
+       // গুগল শিটের লাইভ JSON ইউআরএল (gviz ফরম্যাট)
+const jsonUrl = 'https://docs.google.com/spreadsheets/d/1gX73WskIs3D-8IcyPJ24NT0xn1KIEJSjMXOF9nCQqTg/gviz/tq?tqx=out:json';
+
+fetch(jsonUrl)
+    .then(res => res.text())
+    .then(data => {
+        // গিটহাব সার্ভারের জন্য নিরাপদ জেসন পার্সিং ট্রিক
+        const jsonString = data.substring(data.indexOf("{"), data.lastIndexOf("}") + 1);
+        const jsonData = JSON.parse(jsonString);
+        const rows = jsonData.table.rows;
+
+        // হেডার বাদ দিয়ে সম্পূর্ণ ডাটা অবজেক্ট তৈরি করা
+        const newsList = rows.slice(1).map((row, index) => {
+            const cells = row.c || [];
+            return {
+                id: cells[0] && cells[0].v ? cells[0].v.toString() : (index + 1).toString(),
+                category: cells[1] && cells[1].v ? cells[1].v.toString().toLowerCase().trim() : '',
+                title: cells[2] && cells[2].v ? cells[2].v.toString() : '',
+                summary: cells[3] && cells[3].v ? cells[3].v.toString() : '',
+                image: cells[4] && cells[4].v ? cells[4].v.toString() : 'https://picsum.photos',
+                date: cells[5] && cells[5].v ? cells[5].v.toString() : ''
+            };
+        });
+
+        // 🔗 ১. মেইন বক্সে শুধুমাত্র খেলাধুলা ক্যাটাগরির ডাটা ফিল্টার করা
+        const container = document.getElementById('news-container');
+        if (container) {
+            container.innerHTML = '';
+
+            // গুগল শিটে 'sports', 'খেলাধুলা' বা 'sports ' (স্পেসসহ) যা-ই থাকুক, সব রিড করবে
+            const sportsNews = newsList.filter(news => 
+                news.category.includes('sports') || 
+                news.category.includes('খেলা') ||
+                news.category.includes('খেলাধুলা')
+            );
+
+            if (sportsNews.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">বর্তমানে কোনো খেলাধুলার সংবাদ পাওয়া যায়নি।</div>';
+            } else {
+                // নতুন খেলাধুলার খবর সবার উপরে দেখানোর লুপ
+                [...sportsNews].reverse().forEach(news => {
+                    const shortSummary = news.summary && news.summary.length > 250 
+                        ? news.summary.substring(0, 250) + "..." 
+                        : news.summary;
+
+                    container.innerHTML += `
+                        <div class="news-card" style="background:#fff; border-radius:6px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:20px; display:flex; flex-direction:column; width: 100%;">
+                            <div class="news-image-top" style="width:100%; height:280px;">
+                                <img src="${news.image}" alt="${news.title}" style="width:100%; height:100%; object-fit:cover;">
+                            </div>
+                            <div class="news-text-bottom" style="padding:15px;">
+                                <span style="color:green; font-weight:bold; font-size:12px; display:block; margin-bottom:5px; text-transform:uppercase;">খেলাধুলা</span>
+                                <h3 style="font-size:24px; color:#111; margin:0 0 10px 0; line-height:1.4;">${news.title}</h3>
+                                <p style="font-size:15px; line-height:1.6; color:#444; margin:0 0 15px 0;">${shortSummary}</p>
+                                <a href="details.html?id=${news.id}" class="read-more-btn" style="display:inline-block; background-color:#003366; color:#fff !important; padding:10px 20px; text-decoration:none; font-weight:bold; border-radius:4px; font-size:14px;">আরও পড়ুন</a>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // 🔴 ২. ডানপাশের সাইডবারে লাল রঙের সর্বশেষ শিরোনামের তালিকা (সব খবর আসবে)
+        const latestContainer = document.getElementById('latest-news-container');
+        if (latestContainer) {
+            latestContainer.innerHTML = '';
+            [...newsList].reverse().forEach(news => {
+                latestContainer.innerHTML += `
+                    <div class="latest-item" style="padding: 10px 0; border-bottom: 1px solid #eee;">
+                        <a href="details.html?id=${news.id}" style="color: #cc0000; text-decoration: none; font-weight: bold; display: block; font-size: 14px;">🔺 ${news.title}</a>
+                    </div>
+                `;
+            });
+        }
+    })
+    .catch(err => {
+        console.error('Error loading sports news:', err);
+        const container = document.getElementById('news-container');
+        if (container) {
+            container.innerHTML = '<div style="text-align:center; padding:40px; color:red;">খবর লোড করতে অভ্যন্তরীণ সমস্যা হয়েছে!</div>';
+        }
+    }); 
+      
+    </script>
+</body>
+</html>

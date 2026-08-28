@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আন্তর্জাতিক সংবাদ - বাংলা নিউজ পোর্টাল</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; line-height: 1.6; }
+        header { background-color: #003366; color: #fff; padding: 20px; text-align: center; }
+        header h1 { margin: 0; font-size: 28px; }
+        .back-btn { color: #ffcc00; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 10px; }
+        .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
+        .page-title { color: #ff6600; border-bottom: 2px solid #ff6600; padding-bottom: 10px; margin-bottom: 20px; }
+        .news-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .news-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .news-card img { width: 100%; height: 400px; object-fit: cover; }
+        .news-details { padding: 15px; }
+        .category-tag { color: #008000; font-weight: bold; font-size: 12px; display: block; margin-bottom: 5px; }
+        .news-card h3 { margin: 0 0 10px 0; font-size: 24px; color: #111; }
+        .news-card p { font-size: 16px; color: #555; margin-bottom: 15px; line-height: 1.6; }
+        .news-date { font-size: 12px; color: #888; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>বাংলা নিউজ পোর্টাল</h1>
+        <a href="index.html" class="back-btn">← মূল পাতায় ফিরে যান</a>
+    </header>
+
+    <div class="container">
+        <h2 class="page-title">সর্বশেষ আন্তর্জাতিক সংবাদ</h2>
+        <div id="news-container" class="news-grid">
+            <p style="grid-column: 1/-1; text-align:center; padding:20px;">খবর লোড হচ্ছে...</p>
+        </div>
+    </div>
+<script>
+   
+const jsonUrl = 'https://docs.google.com/spreadsheets/d/1gX73WskIs3D-8IcyPJ24NT0xn1KIEJSjMXOF9nCQqTg/gviz/tq?tqx=out:json';
+    const currentPage = window.location.pathname.split("/").pop().replace(".html", "").toLowerCase().trim();
+    const currentCategory = (currentPage === 'index' || currentPage === 'more' || currentPage === '') ? 'politics' : currentPage;
+
+    fetch(jsonUrl)
+        .then(res => {
+            if (!res.ok) throw new Error('Network response was not ok');
+            return res.text();
+        })
+        .then(text => {
+            // গুগল শিটের জেসন ডেটা নিখুঁতভাবে ক্লিন করা
+            const startIdx = text.indexOf('{');
+            const endIdx = text.lastIndexOf('}') + 1;
+            const rawJson = text.substring(startIdx, endIdx);
+            
+            const jsonData = JSON.parse(rawJson);
+            const rows = jsonData.table.rows;
+            
+            const newsList = rows.map(row => {
+                const cells = row.c || [];
+                return {
+                    id: cells[0] ? cells[0].v : '',
+                    category: cells[1] ? cells[1].v : '',
+                    title: cells[2] ? cells[2].v : '',
+                    summary: cells[3] ? cells[3].v : '',
+                    image: cells[4] ? cells[4].v : 'https://picsum.photos',
+                    date: cells[5] ? cells[5].v : ''
+                };
+            });
+
+            const container = document.getElementById('news-container');
+            container.innerHTML = '';
+            
+            // ক্যাটাগরি অনুযায়ী ফিল্টার করা
+            const filteredNews = newsList.filter(news => news.category && news.category.toString().toLowerCase().trim() === currentCategory);
+            
+            if(filteredNews.length === 0) { 
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#888;">নতুন আন্তর্জাতিক খবরের অপেক্ষা করুন...</div>'; 
+                return; 
+            }
+            
+            // লেটেস্ট খবর সবার ওপরে দেখানোর জন্য রিভার্স করা হলো
+            filteredNews.reverse().forEach(news => {
+                container.innerHTML += `
+                    <div class="news-card">
+                        <img src="${news.image}" alt="${news.title}">
+                        <div class="news-details">
+                            <span class="category-tag">আন্তর্জাতিক</span>
+                            <span class="news-date">${news.date}</span>
+                            <h3>${news.title}</h3>
+                            <p>${news.summary}</p>
+                        </div>
+                    </div>`;
+            });
+        })
+        .catch(err => { 
+            console.error('Error fetching data:', err);
+            document.getElementById('news-container').innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding:20px; color:red;">খবর লোড করতে সমস্যা হচ্ছে। অনুগ্রহ করে গুগল শিটের Share অপশন চেক করুন।</p>'; 
+        });
+</script>
+    
+</body>
+</html>
