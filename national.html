@@ -658,6 +658,47 @@ body{background:var(--bn-bg)!important;color:var(--bn-ink)!important;}
   }
 }
 </style>
+
+<style id="desktop-full-image-max450">
+/* FINAL DESKTOP IMAGE SIZE: full image, maximum height 450px, no crop */
+@media (min-width: 769px) {
+  /* Image containers: no fixed frame and no clipping */
+  .news-grid .news-card .news-image,
+  .news-grid .news-card .news-image-wrap,
+  .news-grid .news-card .news-image-top,
+  #news-grid .news-image,
+  #news-grid .news-image-wrap,
+  #news-container .news-image,
+  #news-container .news-image-wrap,
+  .news-image, .news-image-wrap, .news-image-top {
+    width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    max-height:450px !important;
+    aspect-ratio:auto !important;
+    overflow:visible !important;
+  }
+  /* Images: preserve the complete source image */
+  .news-grid .news-card .news-image img,
+  .news-grid .news-card .news-image-wrap img,
+  .news-grid .news-card .news-image-top img,
+  #news-grid .news-image img,
+  #news-grid .news-image-wrap img,
+  #news-container .news-image img,
+  #news-container .news-image-wrap img,
+  .news-image img, .news-image-wrap img, .news-image-top img,
+  .news-card img, .news-item img, .article-card img, .category-card img {
+    display:block !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    max-height:450px !important;
+    aspect-ratio:auto !important;
+    object-fit:contain !important;
+    object-position:center !important;
+  }
+}
+</style>
 </head>
 <body>
 <div class="news-ticker" aria-label="সর্বশেষ বার্তা"><div class="news-ticker-label">বিশেষ বার্তা</div><div class="news-ticker-track"><span class="news-ticker-text">সত্য ও নির্ভরযোগ্য সংবাদ জানতে চোখ রাখুন বাংলা সংবাদের সঙ্গে—তথ্য যাচাই করে, দায়িত্বশীলতার সঙ্গে প্রতিটি গুরুত্বপূর্ণ খবর পৌঁছে দিতে আমরা আছি আপনাদের পাশে।</span></div></div>
