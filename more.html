@@ -621,6 +621,48 @@ body{background:var(--bn-bg)!important;color:var(--bn-ink)!important;}
 }
 </style>
 
+
+<style id="desktop-news-images-no-crop-clean">
+/* Desktop/Laptop only: show complete news images without cropping. Mobile CSS is intentionally unchanged. */
+@media (min-width: 769px) {
+  .news-grid .news-card,
+  #news-grid .news-card,
+  #news-container .news-card,
+  .vertical-news-block {
+    overflow: visible !important;
+  }
+
+  .news-grid .news-card .news-image-wrap,
+  .news-grid .news-card .news-image,
+  #news-grid .news-card .news-image-wrap,
+  #news-container .news-card .news-image-wrap,
+  .vertical-news-block .news-image-top {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    overflow: visible !important;
+  }
+
+  .news-grid .news-card > img,
+  .news-grid .news-card .news-image img,
+  .news-grid .news-card .news-image-wrap img,
+  #news-grid .news-card img:not(.site-brand-logo),
+  #news-container .news-card img:not(.site-brand-logo),
+  #news-container img:not(.site-brand-logo),
+  .vertical-news-block .news-image-top img {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    object-fit: contain !important;
+    object-position: center !important;
+  }
+}
+</style>
 </head>
 <body>
 <div class="news-ticker" aria-label="সর্বশেষ বার্তা"><div class="news-ticker-label">বিশেষ বার্তা</div><div class="news-ticker-track"><span class="news-ticker-text">সত্য ও নির্ভরযোগ্য সংবাদ জানতে চোখ রাখুন বাংলা সংবাদের সঙ্গে—তথ্য যাচাই করে, দায়িত্বশীলতার সঙ্গে প্রতিটি গুরুত্বপূর্ণ খবর পৌঁছে দিতে আমরা আছি আপনাদের পাশে।</span></div></div>
