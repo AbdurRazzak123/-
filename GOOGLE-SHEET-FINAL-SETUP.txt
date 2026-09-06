@@ -51,7 +51,7 @@ F4 = (ঐচ্ছিক Ad Code)
 
 একই Position-এর একাধিক row রাখা যাবে।
 - ৩-slot পেজে: TOP + MIDDLE + BOTTOM
-- ৪-slot পেজে: TOP + MIDDLE + MIDDLE + BOTTOM; দুই MIDDLE row থাকলে দুই জায়গায় দুই আলাদা ad চলবে।
+- ৪-slot পেজে: TOP + MIDDLE TOP + MIDDLE BOTTOM + BOTTOM; দুই MIDDLE row থাকলে দুই জায়গায় দুই আলাদা ad চলবে।
 - ২-slot পেজে: TOP + BOTTOM
 - একই ad তিন জায়গায় চালাতে চাইলে সেই ad-এর তথ্য/Ad Code TOP, MIDDLE ও BOTTOM row-তে একইভাবে দিন।
 - তিন জায়গায় আলাদা কোম্পানির ad চাইলে তিন row-তে আলাদা Image URL, Click URL, Title বা Ad Code দিন।
