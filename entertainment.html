@@ -701,6 +701,15 @@ body{background:var(--bn-bg)!important;color:var(--bn-ink)!important;}
 .home-summary,.news-summary{display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:3!important;line-clamp:3!important;overflow:hidden!important;line-height:1.65!important;max-height:calc(1.65em * 3)!important;}
 .news-card .read-more-btn{display:inline-block!important;margin-top:8px!important;}
 </style>
+
+<style id="mobile-desktop-ad-row-final">
+.sheet-ad-slot{width:100%!important;max-width:1200px!important;overflow:hidden!important;display:flex!important;justify-content:center!important;align-items:flex-start!important;box-sizing:border-box!important;}
+.sheet-ad-slot .sheet-ad-code-wrap{width:100%!important;max-width:100%!important;overflow:hidden!important;display:block!important;}
+.sheet-ad-slot .sheet-ad-code-wrap iframe{width:1200px!important;min-width:1200px!important;max-width:none!important;border:0!important;display:block!important;}
+@media(max-width:768px){
+  .sheet-ad-slot{width:100%!important;max-width:100%!important;margin-left:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important;}
+}
+</style>
 </head>
 <body>
 <div class="news-ticker" aria-label="সর্বশেষ বার্তা"><div class="news-ticker-label">বিশেষ বার্তা</div><div class="news-ticker-track"><span class="news-ticker-text">সত্য ও নির্ভরযোগ্য সংবাদ জানতে চোখ রাখুন বাংলা সংবাদের সঙ্গে—তথ্য যাচাই করে, দায়িত্বশীলতার সঙ্গে প্রতিটি গুরুত্বপূর্ণ খবর পৌঁছে দিতে আমরা আছি আপনাদের পাশে।</span></div></div>
@@ -738,7 +747,7 @@ load().then(list=>{const c=document.getElementById('news-container');if(!c)retur
 <div class="ad-slot footer-ad" data-ad-slot="bottom"><span>বিজ্ঞাপনের স্থান • Google AdSense অনুমোদনের পর এখানে AdSense কোড বসবে</span></div>
 
 <footer class="site-footer"><h3>বাংলা সংবাদ</h3><p>সর্বশেষ সংবাদ সবার আগে</p><div class="links"><a href="about.html">আমাদের সম্পর্কে</a><a href="contact.html">যোগাযোগ</a><a href="privacy.html">গোপনীয়তা নীতি</a><a href="disclaimer.html">দাবিত্যাগ</a></div><p>© ২০২৬ বাংলা সংবাদ — সর্বস্বত্ব সংরক্ষিত</p></footer>
-<script src="ads-loader.js?v=20260906-ads-v5"></script>
+<script src="ads-loader.js?v=20260906-ads-v6"></script>
 <script src="news-media.js"></script>
 <script src="news-reader.js"></script>
 </body>

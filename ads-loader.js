@@ -51,23 +51,44 @@ function makeAdFrame(code,title){
   iframe.title=String(title||'Advertisement');
   iframe.setAttribute('aria-label',String(title||'Advertisement'));
   iframe.setAttribute('scrolling','no');
-  iframe.style.cssText='display:block;width:970px!important;max-width:none!important;min-width:970px!important;border:0;margin:0;padding:0;background:transparent;overflow:hidden;transform-origin:top left;';
-  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=970,initial-scale=1,maximum-scale=1,user-scalable=no"></head><body style="margin:0;padding:0;width:970px;min-width:970px;overflow:hidden;line-height:normal;">'+String(code||'')+'</body></html>';
+  iframe.style.cssText='display:block;width:1200px!important;max-width:none!important;min-width:1200px!important;border:0;margin:0;padding:0;background:transparent;overflow:hidden;transform-origin:top left;';
+  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=1200,initial-scale=1,maximum-scale=1,user-scalable=no"></head><body style="margin:0;padding:0;width:1200px;min-width:1200px;overflow:hidden;line-height:normal;">'+String(code||'')+'</body></html>';
   iframe.srcdoc=doc;
   wrap.appendChild(iframe);
   const fit=()=>{
     try{
-      const available=Math.max(1,wrap.clientWidth||970);
-      const scale=Math.min(1,available/970);
+      const available=Math.max(1,wrap.clientWidth||1200);
+      const scale=Math.min(1,available/1200);
       iframe.style.transform='scale('+scale+')';
       const d=iframe.contentDocument;
-      const rawH=Math.max(90,Math.ceil((d&&d.documentElement&&d.documentElement.scrollHeight)||0),Math.ceil((d&&d.body&&d.body.scrollHeight)||0),parseFloat(iframe.dataset.contentHeight||'0')||0);
+      let visualH=0;
+      if(d&&d.body){
+        const els=d.body.querySelectorAll('*');
+        for(let i=0;i<els.length;i++){
+          const el=els[i];
+          try{
+            const cs=d.defaultView.getComputedStyle(el);
+            if(cs.display==='none'||cs.visibility==='hidden'||parseFloat(cs.opacity||'1')===0) continue;
+            const r=el.getBoundingClientRect();
+            if(r.width>0&&r.height>0&&r.bottom>0&&r.right>0) visualH=Math.max(visualH,r.bottom);
+          }catch(e){}
+        }
+      }
+      const scrollH=Math.max(
+        Math.ceil((d&&d.documentElement&&d.documentElement.scrollHeight)||0),
+        Math.ceil((d&&d.body&&d.body.scrollHeight)||0)
+      );
+      // Ignore giant blank/invisible ad canvases. Standard banner/video creatives
+      // normally occupy <= 600px at desktop width; the visible element bounds win.
+      const prior=parseFloat(iframe.dataset.contentHeight||'0')||0;
+      let rawH=Math.max(90,Math.ceil(visualH||0),Math.min(900,scrollH),prior);
+      rawH=Math.min(900,rawH);
       iframe.dataset.contentHeight=String(rawH);
       wrap.style.height=Math.ceil(rawH*scale)+'px';
-      wrap.style.minHeight=Math.ceil(90*scale)+'px';
+      wrap.style.minHeight=Math.ceil(80*scale)+'px';
     }catch(e){
-      const available=Math.max(1,wrap.clientWidth||970);
-      const scale=Math.min(1,available/970);
+      const available=Math.max(1,wrap.clientWidth||1200);
+      const scale=Math.min(1,available/1200);
       iframe.style.transform='scale('+scale+')';
       wrap.style.height=Math.ceil(250*scale)+'px';
     }

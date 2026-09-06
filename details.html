@@ -583,6 +583,15 @@ body{background:var(--bn-bg)!important;color:var(--bn-ink)!important;}
 .ad-slot[data-ad-position="middle-top"]>*,.ad-slot[data-ad-position="middle-bottom"]>*{max-width:100%!important}
 @media(max-width:768px){.ad-slot[data-ad-position="middle-top"],.ad-slot[data-ad-position="middle-bottom"]{min-height:80px!important}}
 </style>
+
+<style id="mobile-desktop-ad-row-final">
+.sheet-ad-slot{width:100%!important;max-width:1200px!important;overflow:hidden!important;display:flex!important;justify-content:center!important;align-items:flex-start!important;box-sizing:border-box!important;}
+.sheet-ad-slot .sheet-ad-code-wrap{width:100%!important;max-width:100%!important;overflow:hidden!important;display:block!important;}
+.sheet-ad-slot .sheet-ad-code-wrap iframe{width:1200px!important;min-width:1200px!important;max-width:none!important;border:0!important;display:block!important;}
+@media(max-width:768px){
+  .sheet-ad-slot{width:100%!important;max-width:100%!important;margin-left:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important;}
+}
+</style>
 </head>
 <body>
 <div class="news-ticker"><div class="news-ticker-label">বিশেষ বার্তা</div><div class="news-ticker-track"><span class="news-ticker-text">সত্য ও নির্ভরযোগ্য সংবাদ জানতে চোখ রাখুন বাংলা সংবাদের সঙ্গে—তথ্য যাচাই করে, দায়িত্বশীলতার সঙ্গে প্রতিটি গুরুত্বপূর্ণ খবর পৌঁছে দিতে আমরা আছি আপনাদের পাশে।</span></div></div>
@@ -703,7 +712,7 @@ fetch(jsonUrl+'&_='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(t=>{
 }).catch(()=>document.getElementById('news-content').textContent='খবর লোড করতে সমস্যা হয়েছে।');
 </script>
 
-<script src="ads-loader.js?v=20260906-ads-v5"></script>
+<script src="ads-loader.js?v=20260906-ads-v6"></script>
 
 
 </body></html>
