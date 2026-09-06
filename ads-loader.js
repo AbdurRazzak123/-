@@ -44,31 +44,40 @@ function imageAd(img,click,title){
   return href?'<a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" style="display:block;width:100%;height:auto;text-decoration:none">'+image+'</a>':image;
 }
 function makeAdFrame(code,title){
+  const wrap=document.createElement('div');
+  wrap.className='sheet-ad-code-wrap';
+  wrap.style.cssText='position:relative;width:100%;max-width:100%;margin:0 auto;padding:0;overflow:hidden;display:block;line-height:0;';
   const iframe=document.createElement('iframe');
   iframe.title=String(title||'Advertisement');
   iframe.setAttribute('aria-label',String(title||'Advertisement'));
-  iframe.style.cssText='display:block;width:100%;max-width:100%;border:0;margin:0 auto;padding:0;min-height:90px;height:250px;background:transparent;overflow:hidden;';
-  // Run each ad code inside its own document. This is important because many ad
-  // networks use a fixed container id. Separate iframes let the SAME code be
-  // used in multiple slots without duplicate-id conflicts.
-  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;width:100%;overflow:hidden;">'+String(code||'')+'</body></html>';
+  iframe.setAttribute('scrolling','no');
+  iframe.style.cssText='display:block;width:970px!important;max-width:none!important;min-width:970px!important;border:0;margin:0;padding:0;background:transparent;overflow:hidden;transform-origin:top left;';
+  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=970,initial-scale=1,maximum-scale=1,user-scalable=no"></head><body style="margin:0;padding:0;width:970px;min-width:970px;overflow:hidden;line-height:normal;">'+String(code||'')+'</body></html>';
   iframe.srcdoc=doc;
-  iframe.addEventListener('load',()=>{
+  wrap.appendChild(iframe);
+  const fit=()=>{
     try{
+      const available=Math.max(1,wrap.clientWidth||970);
+      const scale=Math.min(1,available/970);
+      iframe.style.transform='scale('+scale+')';
       const d=iframe.contentDocument;
-      if(!d)return;
-      const resize=()=>{
-        const h=Math.max(90,Math.min(1200,Math.ceil(Math.max(d.documentElement.scrollHeight||0,d.body&&d.body.scrollHeight||0))));
-        if(h>90)iframe.style.height=h+'px';
-      };
-      resize();
-      setTimeout(resize,700);
-      setTimeout(resize,1800);
-      setTimeout(resize,3500);
-    }catch(e){/* cross-document resize is best-effort */}
-  },{once:true});
-  return iframe;
+      const rawH=Math.max(90,Math.ceil((d&&d.documentElement&&d.documentElement.scrollHeight)||0),Math.ceil((d&&d.body&&d.body.scrollHeight)||0),parseFloat(iframe.dataset.contentHeight||'0')||0);
+      iframe.dataset.contentHeight=String(rawH);
+      wrap.style.height=Math.ceil(rawH*scale)+'px';
+      wrap.style.minHeight=Math.ceil(90*scale)+'px';
+    }catch(e){
+      const available=Math.max(1,wrap.clientWidth||970);
+      const scale=Math.min(1,available/970);
+      iframe.style.transform='scale('+scale+')';
+      wrap.style.height=Math.ceil(250*scale)+'px';
+    }
+  };
+  iframe.addEventListener('load',()=>{fit();setTimeout(fit,300);setTimeout(fit,900);setTimeout(fit,1800);setTimeout(fit,3500);});
+  if(window.ResizeObserver){const ro=new ResizeObserver(fit);ro.observe(wrap);}else{window.addEventListener('resize',fit,{passive:true});}
+  setTimeout(fit,0);
+  return wrap;
 }
+
 function imageAdNode(slot,img,click,title){
   const src=safeUrl(img),href=safeUrl(click),alt=esc(title||'Advertisement');
   if(!src)return false;
