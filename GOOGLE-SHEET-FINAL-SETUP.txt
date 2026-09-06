@@ -41,9 +41,10 @@ MIDDLE (পুরোনো/legacy 3-slot page-এর জন্য)
 3) MIDDLE BOTTOM
 4) BOTTOM
 
-একই Code/Video/Ad চার জায়গায় ব্যবহার করতে চাইলে সবচেয়ে সহজ উপায়:
-- একটি row-তে Position = ALL রাখো এবং সেই row-তে Ad Code (বা Image URL) দাও।
-- অথবা TOP, MIDDLE TOP, MIDDLE BOTTOM, BOTTOM—চারটি row-তে একই Ad Code/Video দিতে পারো।
+একই Code/Video/Ad চার জায়গায় ব্যবহার করতে চাইলে দুইটি উপায় আছে:
+- সবচেয়ে সহজ: একটি row-তে Position = ALL রাখো এবং সেই row-তে Ad Code (বা Image URL) দাও। সিস্টেম একই বিজ্ঞাপন চারটি slot-এ আলাদাভাবে চালাবে।
+- অথবা TOP, MIDDLE TOP, MIDDLE BOTTOM, BOTTOM—চারটি row-তেই একই Ad Code/Video দিতে পারো।
+- গুরুত্বপূর্ণ: একই third-party Ad Code-এ একই container ID থাকলেও সমস্যা হবে না; প্রতিটি slot আলাদা isolated ad frame-এর ভিতরে code চালায়।
 
 চার কোম্পানির চারটি আলাদা ad চাইলে চারটি আলাদা row ব্যবহার করো:
 A2 = TOP

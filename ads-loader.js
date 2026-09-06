@@ -43,21 +43,52 @@ function imageAd(img,click,title){
   const image='<img src="'+esc(src)+'" alt="'+alt+'" loading="lazy" style="display:block;width:100%;height:auto;max-width:100%;object-fit:contain;border:0;margin:0;padding:0">';
   return href?'<a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" style="display:block;width:100%;height:auto;text-decoration:none">'+image+'</a>':image;
 }
-function runScripts(slot){
-  slot.querySelectorAll('script').forEach(old=>{
-    const s=document.createElement('script');
-    for(const a of old.attributes)s.setAttribute(a.name,a.value);
-    if(old.src){s.src=old.src;s.async=old.async;s.defer=old.defer;}
-    else s.text=old.text||old.textContent||'';
-    old.replaceWith(s);
-  });
+function makeAdFrame(code,title){
+  const iframe=document.createElement('iframe');
+  iframe.title=String(title||'Advertisement');
+  iframe.setAttribute('aria-label',String(title||'Advertisement'));
+  iframe.style.cssText='display:block;width:100%;max-width:100%;border:0;margin:0 auto;padding:0;min-height:90px;height:250px;background:transparent;overflow:hidden;';
+  // Run each ad code inside its own document. This is important because many ad
+  // networks use a fixed container id. Separate iframes let the SAME code be
+  // used in multiple slots without duplicate-id conflicts.
+  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;width:100%;overflow:hidden;">'+String(code||'')+'</body></html>';
+  iframe.srcdoc=doc;
+  iframe.addEventListener('load',()=>{
+    try{
+      const d=iframe.contentDocument;
+      if(!d)return;
+      const resize=()=>{
+        const h=Math.max(90,Math.min(1200,Math.ceil(Math.max(d.documentElement.scrollHeight||0,d.body&&d.body.scrollHeight||0))));
+        if(h>90)iframe.style.height=h+'px';
+      };
+      resize();
+      setTimeout(resize,700);
+      setTimeout(resize,1800);
+      setTimeout(resize,3500);
+    }catch(e){/* cross-document resize is best-effort */}
+  },{once:true});
+  return iframe;
+}
+function imageAdNode(slot,img,click,title){
+  const src=safeUrl(img),href=safeUrl(click),alt=esc(title||'Advertisement');
+  if(!src)return false;
+  const image=document.createElement('img');
+  image.src=src; image.alt=title||'Advertisement'; image.loading='lazy';
+  image.style.cssText='display:block;width:100%;height:auto;max-width:100%;object-fit:contain;border:0;margin:0;padding:0;';
+  if(href){
+    const a=document.createElement('a'); a.href=href; a.target='_blank'; a.rel='noopener noreferrer';
+    a.style.cssText='display:block;width:100%;height:auto;text-decoration:none;'; a.appendChild(image); slot.appendChild(a);
+  }else slot.appendChild(image);
+  return true;
 }
 function render(slot,ad){
   if(!ad)return false;
-  const content=ad.code||imageAd(ad.image,ad.click,ad.title);
-  if(!content)return false;
-  slot.innerHTML=content;
-  runScripts(slot);
+  slot.innerHTML='';
+  if(ad.code){
+    slot.appendChild(makeAdFrame(ad.code,ad.title));
+  }else if(!imageAdNode(slot,ad.image,ad.click,ad.title)){
+    return false;
+  }
   slot.classList.add('ad-loaded');
   slot.setAttribute('data-ad-loaded','yes');
   return true;
@@ -72,38 +103,36 @@ function getSlots(){
   });
 }
 function mapSlots(slots){
+  const explicit=slots.map(canonicalSlotPosition);
+  // Explicit position attributes are authoritative. This is used by Details,
+  // whose four slots are TOP/MIDDLE TOP/MIDDLE BOTTOM/BOTTOM.
+  if(explicit.every(Boolean))return explicit;
   const count=slots.length;
-  const explicit=slots.some(s=>/^(MIDDLE_TOP|MIDDLE_BOTTOM)$/i.test(canonicalSlotPosition(s)));
-  if(explicit)return slots.map(s=>canonicalSlotPosition(s));
   if(count===2)return ['TOP','BOTTOM'];
   if(count===3)return ['TOP','MIDDLE','BOTTOM'];
-  if(count===4)return ['TOP','MIDDLE','MIDDLE','BOTTOM'];
+  if(count===4)return ['TOP','MIDDLE_TOP','MIDDLE_BOTTOM','BOTTOM'];
   return [];
 }
 function pick(adSets,pos,used){
-  // 1) Exact position is always preferred.
-  let key=pos;
-  let list=adSets[key]||[];
+  // Exact position first.
+  let list=adSets[pos]||[];
   if(list.length){
-    const i=used[key]||0;
-    used[key]=i+1;
-    return list[i]||list[0];
+    // A position can contain multiple active rows. Cycle through them per page.
+    const i=used[pos]||0; used[pos]=i+1;
+    return list[i%list.length];
   }
-  // 2) One explicit ALL row can be reused independently in every slot.
+  // ALL is intentionally reusable: one row can power every slot.
   list=adSets.ALL||[];
-  if(list.length){
-    const i=used.ALL||0;
-    used.ALL=i+1;
-    return list[i]||list[0];
+  if(list.length)return list[0];
+  // Legacy MIDDLE row supports the single MIDDLE slot on index.html.
+  if(pos==='MIDDLE'){
+    list=adSets.MIDDLE||[];
+    if(list.length)return list[0];
   }
-  // 3) Legacy MIDDLE row is a fallback for either middle position.
+  // Legacy MIDDLE rows can also fill a missing middle-specific row.
   if(pos==='MIDDLE_TOP'||pos==='MIDDLE_BOTTOM'){
     list=adSets.MIDDLE||[];
-    if(list.length){
-      const i=used.MIDDLE||0;
-      used.MIDDLE=i+1;
-      return list[i]||list[0];
-    }
+    if(list.length){const i=used.MIDDLE||0;used.MIDDLE=i+1;return list[i%list.length];}
   }
   return null;
 }
