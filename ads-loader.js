@@ -44,57 +44,96 @@ function imageAd(img,click,title){
   return href?'<a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" style="display:block;width:100%;height:auto;text-decoration:none">'+image+'</a>':image;
 }
 function makeAdFrame(code,title){
+  // Keep the ad creative on the exact same fixed desktop canvas on every device.
+  // Mobile only scales the complete canvas; the creative itself must never reflow.
+  const DESIGN_WIDTH=1200;
   const wrap=document.createElement('div');
   wrap.className='sheet-ad-code-wrap';
-  wrap.style.cssText='position:relative;width:100%;max-width:100%;margin:0 auto;padding:0;overflow:hidden;display:block;line-height:0;';
+  wrap.style.cssText='position:relative;width:100%;max-width:100%;height:0;margin:0 auto;padding:0;overflow:hidden;display:block;line-height:0;box-sizing:border-box;';
+
   const iframe=document.createElement('iframe');
   iframe.title=String(title||'Advertisement');
   iframe.setAttribute('aria-label',String(title||'Advertisement'));
   iframe.setAttribute('scrolling','no');
-  iframe.style.cssText='display:block;width:1200px!important;max-width:none!important;min-width:1200px!important;border:0;margin:0;padding:0;background:transparent;overflow:hidden;transform-origin:top left;';
-  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=1200,initial-scale=1,maximum-scale=1,user-scalable=no"></head><body style="margin:0;padding:0;width:1200px;min-width:1200px;overflow:hidden;line-height:normal;">'+String(code||'')+'</body></html>';
+  iframe.setAttribute('frameborder','0');
+  iframe.style.cssText='display:block;position:absolute;left:0;top:0;width:'+DESIGN_WIDTH+'px!important;min-width:'+DESIGN_WIDTH+'px!important;max-width:none!important;height:250px;border:0;margin:0;padding:0;background:transparent;overflow:hidden;transform-origin:top left;will-change:transform;';
+
+  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width='+DESIGN_WIDTH+',initial-scale=1,maximum-scale=1,user-scalable=no"><style>html,body{width:'+DESIGN_WIDTH+'px!important;min-width:'+DESIGN_WIDTH+'px!important;max-width:'+DESIGN_WIDTH+'px!important;margin:0!important;padding:0!important;overflow:hidden!important;}*{box-sizing:border-box;}</style></head><body style="width:'+DESIGN_WIDTH+'px;min-width:'+DESIGN_WIDTH+'px;max-width:'+DESIGN_WIDTH+'px;margin:0;padding:0;overflow:hidden;line-height:normal;">'+String(code||'')+'</body></html>';
   iframe.srcdoc=doc;
   wrap.appendChild(iframe);
+
+  let lastRawH=250;
+  const getVisualHeight=()=>{
+    const d=iframe.contentDocument;
+    if(!d||!d.body)return 0;
+    let h=0;
+    const bodyRect=d.body.getBoundingClientRect();
+    h=Math.max(h,bodyRect.height||0);
+    const els=d.body.querySelectorAll('*');
+    for(let i=0;i<els.length;i++){
+      const el=els[i];
+      try{
+        const cs=d.defaultView.getComputedStyle(el);
+        if(cs.display==='none'||cs.visibility==='hidden'||parseFloat(cs.opacity||'1')===0)continue;
+        const r=el.getBoundingClientRect();
+        if(r.width>0&&r.height>0&&r.bottom>0)h=Math.max(h,r.bottom);
+      }catch(e){}
+    }
+    return h;
+  };
+
   const fit=()=>{
     try{
-      const available=Math.max(1,wrap.clientWidth||1200);
-      const scale=Math.min(1,available/1200);
+      const available=Math.max(1,wrap.clientWidth||DESIGN_WIDTH);
+      // The ONLY mobile adaptation: scale the complete desktop canvas.
+      const scale=Math.min(1,available/DESIGN_WIDTH);
       iframe.style.transform='scale('+scale+')';
+
       const d=iframe.contentDocument;
-      let visualH=0;
-      if(d&&d.body){
-        const els=d.body.querySelectorAll('*');
-        for(let i=0;i<els.length;i++){
-          const el=els[i];
-          try{
-            const cs=d.defaultView.getComputedStyle(el);
-            if(cs.display==='none'||cs.visibility==='hidden'||parseFloat(cs.opacity||'1')===0) continue;
-            const r=el.getBoundingClientRect();
-            if(r.width>0&&r.height>0&&r.bottom>0&&r.right>0) visualH=Math.max(visualH,r.bottom);
-          }catch(e){}
-        }
-      }
+      const visualH=getVisualHeight();
       const scrollH=Math.max(
         Math.ceil((d&&d.documentElement&&d.documentElement.scrollHeight)||0),
         Math.ceil((d&&d.body&&d.body.scrollHeight)||0)
       );
-      // Ignore giant blank/invisible ad canvases. Standard banner/video creatives
-      // normally occupy <= 600px at desktop width; the visible element bounds win.
-      const prior=parseFloat(iframe.dataset.contentHeight||'0')||0;
-      let rawH=Math.max(90,Math.ceil(visualH||0),Math.min(900,scrollH),prior);
+      // Prefer actual visible content. Never let a previously measured giant
+      // blank canvas keep the slot hundreds of pixels tall.
+      let rawH=Math.max(90,Math.ceil(visualH||0));
+      if(!visualH) rawH=Math.max(90,Math.min(900,Math.ceil(scrollH||0)||250));
       rawH=Math.min(900,rawH);
-      iframe.dataset.contentHeight=String(rawH);
+      lastRawH=rawH;
+      iframe.style.height=rawH+'px';
       wrap.style.height=Math.ceil(rawH*scale)+'px';
-      wrap.style.minHeight=Math.ceil(80*scale)+'px';
+      wrap.style.minHeight=Math.ceil(90*scale)+'px';
     }catch(e){
-      const available=Math.max(1,wrap.clientWidth||1200);
-      const scale=Math.min(1,available/1200);
+      const available=Math.max(1,wrap.clientWidth||DESIGN_WIDTH);
+      const scale=Math.min(1,available/DESIGN_WIDTH);
       iframe.style.transform='scale('+scale+')';
-      wrap.style.height=Math.ceil(250*scale)+'px';
+      iframe.style.height=lastRawH+'px';
+      wrap.style.height=Math.ceil(lastRawH*scale)+'px';
     }
   };
-  iframe.addEventListener('load',()=>{fit();setTimeout(fit,300);setTimeout(fit,900);setTimeout(fit,1800);setTimeout(fit,3500);});
-  if(window.ResizeObserver){const ro=new ResizeObserver(fit);ro.observe(wrap);}else{window.addEventListener('resize',fit,{passive:true});}
+
+  iframe.addEventListener('load',()=>{
+    fit();
+    setTimeout(fit,150);
+    setTimeout(fit,500);
+    setTimeout(fit,1200);
+    setTimeout(fit,2500);
+    setTimeout(fit,5000);
+    try{
+      const d=iframe.contentDocument;
+      if(window.ResizeObserver&&d&&d.body){
+        const innerRO=new ResizeObserver(fit);
+        innerRO.observe(d.body);
+      }
+    }catch(e){}
+  });
+  if(window.ResizeObserver){
+    const ro=new ResizeObserver(fit);
+    ro.observe(wrap);
+  }else{
+    window.addEventListener('resize',fit,{passive:true});
+  }
   setTimeout(fit,0);
   return wrap;
 }

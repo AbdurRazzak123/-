@@ -703,13 +703,22 @@ body{background:var(--bn-bg)!important;color:var(--bn-ink)!important;}
 .news-card .read-more-btn{display:inline-block!important;margin-top:8px!important;}
 </style>
 
-<style id="mobile-desktop-ad-row-final">
+<style id="mobile-desktop-ad-row-final-v2">
 .sheet-ad-slot{width:100%!important;max-width:1200px!important;overflow:hidden!important;display:flex!important;justify-content:center!important;align-items:flex-start!important;box-sizing:border-box!important;}
 .sheet-ad-slot .sheet-ad-code-wrap{width:100%!important;max-width:100%!important;overflow:hidden!important;display:block!important;}
 .sheet-ad-slot .sheet-ad-code-wrap iframe{width:1200px!important;min-width:1200px!important;max-width:none!important;border:0!important;display:block!important;}
 @media(max-width:768px){
   .sheet-ad-slot{width:100%!important;max-width:100%!important;margin-left:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important;}
 }
+
+<style id="desktop-ad-canvas-lock-v7">
+.sheet-ad-slot{min-height:0!important;height:auto!important;max-height:none!important;box-sizing:border-box!important;}
+.sheet-ad-slot .sheet-ad-code-wrap{min-height:0!important;height:0;box-sizing:border-box!important;}
+.sheet-ad-slot .sheet-ad-code-wrap iframe{position:absolute!important;left:0!important;top:0!important;width:1200px!important;min-width:1200px!important;max-width:none!important;transform-origin:top left!important;}
+@media(max-width:768px){
+  .sheet-ad-slot{min-height:0!important;height:auto!important;padding:0!important;margin-left:0!important;margin-right:0!important;}
+}
+</style>
 </style>
 </head>
 <body>
@@ -748,7 +757,7 @@ load().then(list=>{const c=document.getElementById('news-container');if(!c)retur
 <div class="ad-slot footer-ad" data-ad-slot="bottom"><span>বিজ্ঞাপনের স্থান • Google AdSense অনুমোদনের পর এখানে AdSense কোড বসবে</span></div>
 
 <footer class="site-footer"><h3>বাংলা সংবাদ</h3><p>সর্বশেষ সংবাদ সবার আগে</p><div class="links"><a href="about.html">আমাদের সম্পর্কে</a><a href="contact.html">যোগাযোগ</a><a href="privacy.html">গোপনীয়তা নীতি</a><a href="disclaimer.html">দাবিত্যাগ</a></div><p>© ২০২৬ বাংলা সংবাদ — সর্বস্বত্ব সংরক্ষিত</p></footer>
-<script src="ads-loader.js?v=20260906-ads-v6"></script>
+<script src="ads-loader.js?v=20260906-ads-v7"></script>
 <script src="news-media.js"></script>
 <script src="news-reader.js"></script>
 </body>
