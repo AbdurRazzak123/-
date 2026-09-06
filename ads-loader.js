@@ -58,7 +58,18 @@ function makeAdFrame(code,title){
   iframe.setAttribute('frameborder','0');
   iframe.style.cssText='display:block;position:absolute;left:0;top:0;width:'+DESIGN_WIDTH+'px!important;min-width:'+DESIGN_WIDTH+'px!important;max-width:none!important;height:250px;border:0;margin:0;padding:0;background:transparent;overflow:hidden;transform-origin:top left;will-change:transform;';
 
-  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width='+DESIGN_WIDTH+',initial-scale=1,maximum-scale=1,user-scalable=no"><style>html,body{width:'+DESIGN_WIDTH+'px!important;min-width:'+DESIGN_WIDTH+'px!important;max-width:'+DESIGN_WIDTH+'px!important;margin:0!important;padding:0!important;overflow:hidden!important;}*{box-sizing:border-box;}</style></head><body style="width:'+DESIGN_WIDTH+'px;min-width:'+DESIGN_WIDTH+'px;max-width:'+DESIGN_WIDTH+'px;margin:0;padding:0;overflow:hidden;line-height:normal;">'+String(code||'')+'</body></html>';
+  /* IMPORTANT: Adsterra Native Banner must render on mobile as the SAME
+     desktop horizontal creative, then the whole canvas is scaled down.
+     Some native creatives reflow after seeing a phone-sized iframe.  The
+     inner document is therefore locked to a 1200px desktop canvas before
+     the ad code is inserted. */
+  const desktopLockCss=`
+    html,body{width:${DESIGN_WIDTH}px!important;min-width:${DESIGN_WIDTH}px!important;max-width:${DESIGN_WIDTH}px!important;margin:0!important;padding:0!important;overflow:hidden!important;}
+    body{line-height:normal!important;}
+    *,*:before,*:after{box-sizing:border-box;}
+    img,iframe,video,svg,canvas{max-width:none!important;}
+  `;
+  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width='+DESIGN_WIDTH+',initial-scale=1,maximum-scale=1,user-scalable=no"><style>'+desktopLockCss+'</style></head><body style="width:'+DESIGN_WIDTH+'px!important;min-width:'+DESIGN_WIDTH+'px!important;max-width:'+DESIGN_WIDTH+'px!important;margin:0!important;padding:0!important;overflow:hidden!important;line-height:normal!important;">'+String(code||'')+'</body></html>';
   iframe.srcdoc=doc;
   wrap.appendChild(iframe);
 
@@ -90,6 +101,12 @@ function makeAdFrame(code,title){
       iframe.style.transform='scale('+scale+')';
 
       const d=iframe.contentDocument;
+      if(d&&d.head&&!d.getElementById('desktop-ad-force-lock')){
+        const st=d.createElement('style');
+        st.id='desktop-ad-force-lock';
+        st.textContent='html,body{width:'+DESIGN_WIDTH+'px!important;min-width:'+DESIGN_WIDTH+'px!important;max-width:'+DESIGN_WIDTH+'px!important;overflow:hidden!important;} img,iframe,video,svg,canvas{max-width:none!important;}';
+        d.head.appendChild(st);
+      }
       const visualH=getVisualHeight();
       const scrollH=Math.max(
         Math.ceil((d&&d.documentElement&&d.documentElement.scrollHeight)||0),
