@@ -44,113 +44,103 @@ function imageAd(img,click,title){
   return href?'<a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer" style="display:block;width:100%;height:auto;text-decoration:none">'+image+'</a>':image;
 }
 function makeAdFrame(code,title){
-  // Keep the ad creative on the exact same fixed desktop canvas on every device.
-  // Mobile only scales the complete canvas; the creative itself must never reflow.
+  // Keep Adsterra Native Banner in ONE desktop horizontal layout on every device.
+  // On mobile we scale the complete 1200px canvas instead of allowing the
+  // Native Banner script to switch to its mobile/vertical layout.
   const DESIGN_WIDTH=1200;
+  const DESIGN_HEIGHT=300;
+
   const wrap=document.createElement('div');
   wrap.className='sheet-ad-code-wrap';
-  wrap.style.cssText='position:relative;width:100%;max-width:100%;height:0;margin:0 auto;padding:0;overflow:hidden;display:block;line-height:0;box-sizing:border-box;';
+  wrap.style.cssText='position:relative;width:100%;max-width:100%;height:'+DESIGN_HEIGHT+'px;margin:0 auto;padding:0;overflow:hidden;display:block;line-height:0;box-sizing:border-box;contain:layout paint;';
 
   const iframe=document.createElement('iframe');
   iframe.title=String(title||'Advertisement');
   iframe.setAttribute('aria-label',String(title||'Advertisement'));
   iframe.setAttribute('scrolling','no');
   iframe.setAttribute('frameborder','0');
-  iframe.style.cssText='display:block;position:absolute;left:0;top:0;width:'+DESIGN_WIDTH+'px!important;min-width:'+DESIGN_WIDTH+'px!important;max-width:none!important;height:250px;border:0;margin:0;padding:0;background:transparent;overflow:hidden;transform-origin:top left;will-change:transform;';
+  iframe.setAttribute('allow','autoplay; fullscreen');
+  iframe.style.cssText='display:block;position:absolute;left:0;top:0;width:'+DESIGN_WIDTH+'px;height:'+DESIGN_HEIGHT+'px;min-width:'+DESIGN_WIDTH+'px;max-width:none;border:0;margin:0;padding:0;background:transparent;overflow:hidden;transform-origin:top left;will-change:transform;';
 
-  /* IMPORTANT: Adsterra Native Banner must render on mobile as the SAME
-     desktop horizontal creative, then the whole canvas is scaled down.
-     Some native creatives reflow after seeing a phone-sized iframe.  The
-     inner document is therefore locked to a 1200px desktop canvas before
-     the ad code is inserted. */
-  const desktopLockCss=`
-    html,body{width:${DESIGN_WIDTH}px!important;min-width:${DESIGN_WIDTH}px!important;max-width:${DESIGN_WIDTH}px!important;margin:0!important;padding:0!important;overflow:hidden!important;}
-    body{line-height:normal!important;}
-    *,*:before,*:after{box-sizing:border-box;}
-    img,iframe,video,svg,canvas{max-width:none!important;}
-  `;
-  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width='+DESIGN_WIDTH+',initial-scale=1,maximum-scale=1,user-scalable=no"><style>'+desktopLockCss+'</style></head><body style="width:'+DESIGN_WIDTH+'px!important;min-width:'+DESIGN_WIDTH+'px!important;max-width:'+DESIGN_WIDTH+'px!important;margin:0!important;padding:0!important;overflow:hidden!important;line-height:normal!important;">'+String(code||'')+'</body></html>';
+  // This runs BEFORE the Adsterra script. Some native creatives inspect
+  // viewport values in JavaScript and choose a vertical layout on phones.
+  // Present a desktop viewport to that script while the outer frame scales.
+  const bootstrap=`
+(function(){
+  try{
+    Object.defineProperties(window,{
+      innerWidth:{configurable:true,get:function(){return ${DESIGN_WIDTH};}},
+      outerWidth:{configurable:true,get:function(){return ${DESIGN_WIDTH};}},
+      screenX:{configurable:true,get:function(){return 0;}},
+      screenY:{configurable:true,get:function(){return 0;}}
+    });
+  }catch(e){}
+  try{
+    Object.defineProperty(window,'matchMedia',{configurable:true,value:function(q){
+      var m=String(q||'').match(/(min|max)-width\\s*:\\s*(\\d+)px/i);
+      var width=${DESIGN_WIDTH}, ok=true;
+      if(m){ var n=Number(m[2]); ok=m[1].toLowerCase()==='min'?width>=n:width<=n; }
+      return {matches:ok,media:String(q||''),onchange:null,addListener:function(){},removeListener:function(){},addEventListener:function(){},removeEventListener:function(){},dispatchEvent:function(){return false;}};
+    }});
+  }catch(e){}
+})();`;
+
+  const desktopCss=`
+html,body{width:${DESIGN_WIDTH}px!important;min-width:${DESIGN_WIDTH}px!important;max-width:${DESIGN_WIDTH}px!important;margin:0!important;padding:0!important;overflow:hidden!important;}
+body{line-height:normal!important;}
+*,*:before,*:after{box-sizing:border-box;}
+img,iframe,video,svg,canvas{max-width:none!important;}
+`;
+
+  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width='+DESIGN_WIDTH+',initial-scale=1,maximum-scale=1,user-scalable=no"><style>'+desktopCss+'</style><script>'+bootstrap+'<\/script></head><body style="width:'+DESIGN_WIDTH+'px!important;min-width:'+DESIGN_WIDTH+'px!important;max-width:'+DESIGN_WIDTH+'px!important;margin:0!important;padding:0!important;overflow:hidden!important;">'+String(code||'')+'</body></html>';
   iframe.srcdoc=doc;
   wrap.appendChild(iframe);
 
-  let lastRawH=250;
+  let rawHeight=DESIGN_HEIGHT;
   const getVisualHeight=()=>{
-    const d=iframe.contentDocument;
-    if(!d||!d.body)return 0;
-    let h=0;
-    const bodyRect=d.body.getBoundingClientRect();
-    h=Math.max(h,bodyRect.height||0);
-    const els=d.body.querySelectorAll('*');
-    for(let i=0;i<els.length;i++){
-      const el=els[i];
-      try{
-        const cs=d.defaultView.getComputedStyle(el);
-        if(cs.display==='none'||cs.visibility==='hidden'||parseFloat(cs.opacity||'1')===0)continue;
-        const r=el.getBoundingClientRect();
-        if(r.width>0&&r.height>0&&r.bottom>0)h=Math.max(h,r.bottom);
-      }catch(e){}
-    }
-    return h;
+    try{
+      const d=iframe.contentDocument;
+      if(!d||!d.body)return 0;
+      let h=Math.max(d.body.getBoundingClientRect().height||0,d.body.scrollHeight||0);
+      const els=d.body.querySelectorAll('*');
+      for(let i=0;i<els.length;i++){
+        try{
+          const r=els[i].getBoundingClientRect();
+          if(r.width>0&&r.height>0&&r.bottom>0)h=Math.max(h,r.bottom);
+        }catch(e){}
+      }
+      return Math.min(900,Math.max(90,Math.ceil(h)));
+    }catch(e){return 0;}
   };
 
   const fit=()=>{
-    try{
-      const available=Math.max(1,wrap.clientWidth||DESIGN_WIDTH);
-      // The ONLY mobile adaptation: scale the complete desktop canvas.
-      const scale=Math.min(1,available/DESIGN_WIDTH);
-      iframe.style.transform='scale('+scale+')';
-
-      const d=iframe.contentDocument;
-      if(d&&d.head&&!d.getElementById('desktop-ad-force-lock')){
-        const st=d.createElement('style');
-        st.id='desktop-ad-force-lock';
-        st.textContent='html,body{width:'+DESIGN_WIDTH+'px!important;min-width:'+DESIGN_WIDTH+'px!important;max-width:'+DESIGN_WIDTH+'px!important;overflow:hidden!important;} img,iframe,video,svg,canvas{max-width:none!important;}';
-        d.head.appendChild(st);
-      }
-      const visualH=getVisualHeight();
-      const scrollH=Math.max(
-        Math.ceil((d&&d.documentElement&&d.documentElement.scrollHeight)||0),
-        Math.ceil((d&&d.body&&d.body.scrollHeight)||0)
-      );
-      // Prefer actual visible content. Never let a previously measured giant
-      // blank canvas keep the slot hundreds of pixels tall.
-      let rawH=Math.max(90,Math.ceil(visualH||0));
-      if(!visualH) rawH=Math.max(90,Math.min(900,Math.ceil(scrollH||0)||250));
-      rawH=Math.min(900,rawH);
-      lastRawH=rawH;
-      iframe.style.height=rawH+'px';
-      wrap.style.height=Math.ceil(rawH*scale)+'px';
-      wrap.style.minHeight=Math.ceil(90*scale)+'px';
-    }catch(e){
-      const available=Math.max(1,wrap.clientWidth||DESIGN_WIDTH);
-      const scale=Math.min(1,available/DESIGN_WIDTH);
-      iframe.style.transform='scale('+scale+')';
-      iframe.style.height=lastRawH+'px';
-      wrap.style.height=Math.ceil(lastRawH*scale)+'px';
-    }
+    const available=Math.max(1,wrap.parentElement?wrap.parentElement.clientWidth:wrap.clientWidth||DESIGN_WIDTH);
+    const scale=Math.min(1,available/DESIGN_WIDTH);
+    iframe.style.transform='scale('+scale+')';
+    const h=getVisualHeight()||rawHeight;
+    rawHeight=Math.min(900,Math.max(90,h));
+    iframe.style.height=rawHeight+'px';
+    wrap.style.height=Math.ceil(rawHeight*scale)+'px';
   };
 
   iframe.addEventListener('load',()=>{
     fit();
-    setTimeout(fit,150);
-    setTimeout(fit,500);
-    setTimeout(fit,1200);
-    setTimeout(fit,2500);
-    setTimeout(fit,5000);
+    [100,300,800,1500,3000,5000].forEach(t=>setTimeout(fit,t));
     try{
       const d=iframe.contentDocument;
+      if(d&&d.head&&!d.getElementById('desktop-ad-force-lock')){
+        const st=d.createElement('style');
+        st.id='desktop-ad-force-lock';
+        st.textContent=desktopCss;
+        d.head.appendChild(st);
+      }
       if(window.ResizeObserver&&d&&d.body){
-        const innerRO=new ResizeObserver(fit);
-        innerRO.observe(d.body);
+        const roInner=new ResizeObserver(fit); roInner.observe(d.body);
       }
     }catch(e){}
   });
-  if(window.ResizeObserver){
-    const ro=new ResizeObserver(fit);
-    ro.observe(wrap);
-  }else{
-    window.addEventListener('resize',fit,{passive:true});
-  }
+  if(window.ResizeObserver){const ro=new ResizeObserver(fit);ro.observe(wrap);}
+  window.addEventListener('resize',fit,{passive:true});
   setTimeout(fit,0);
   return wrap;
 }
