@@ -10,7 +10,7 @@ G Image2 (Optional)
 H Image3 (Optional)
 I Video (Optional)
 
-Homepage/category pages: Details-এর প্রথম ১০টি ভিজ্যুয়াল লাইন পর্যন্ত summary দেখাবে, তারপর “আরও পড়ুন”। Image1, Image2, Image3 — তিনটিই ঐচ্ছিক; কোনো ছবি না দিলেও শুধু খবর প্রকাশ হবে।
+Homepage/category pages (index.html ছাড়া): Details-এর প্রথম ৩টি ভিজ্যুয়াল লাইন পর্যন্ত summary দেখাবে, তারপর “আরও পড়ুন”। index.html-এর নিজস্ব নিয়ম অপরিবর্তিত। Image1, Image2, Image3 — তিনটিই ঐচ্ছিক; কোনো ছবি না দিলেও শুধু খবর প্রকাশ হবে।
 Details page: আগের নিয়ম অনুযায়ী প্রথম ৩০টি Unicode character বাদ দিয়ে বাকি লেখা দেখাবে। Image2 প্রায় ৩০–৪০ লাইন (টার্গেট ৩৫ লাইন) পরে; Image3 ও Video শেষে/পরবর্তী অংশে।
 Category label মোবাইলে ছবির ওপর আর বসবে না; ছবির নিচে সাদা অংশে থাকবে।
 
@@ -27,38 +27,42 @@ D1 = Click URL
 E1 = Title
 F1 = Ad Code
 
-এর নিচে:
+Position-এর অনুমোদিত নাম:
+TOP
+MIDDLE TOP
+MIDDLE BOTTOM
+BOTTOM
+ALL (একই বিজ্ঞাপন সব জায়গায় চালানোর জন্য)
+MIDDLE (পুরোনো/legacy 3-slot page-এর জন্য)
+
+চারটি ad slot থাকা page-এ ক্রম হবে:
+1) TOP
+2) MIDDLE TOP
+3) MIDDLE BOTTOM
+4) BOTTOM
+
+একই Code/Video/Ad চার জায়গায় ব্যবহার করতে চাইলে সবচেয়ে সহজ উপায়:
+- একটি row-তে Position = ALL রাখো এবং সেই row-তে Ad Code (বা Image URL) দাও।
+- অথবা TOP, MIDDLE TOP, MIDDLE BOTTOM, BOTTOM—চারটি row-তে একই Ad Code/Video দিতে পারো।
+
+চার কোম্পানির চারটি আলাদা ad চাইলে চারটি আলাদা row ব্যবহার করো:
 A2 = TOP
-B2 = Yes/No
-C2 = (ঐচ্ছিক Image URL)
-D2 = (ঐচ্ছিক Click URL)
-E2 = (ঐচ্ছিক Title)
-F2 = (ঐচ্ছিক Ad Code)
+A3 = MIDDLE TOP
+A4 = MIDDLE BOTTOM
+A5 = BOTTOM
+এবং প্রতিটি row-তে আলাদা Image URL / Click URL / Title / Ad Code দিতে পারো।
 
-A3 = MIDDLE
-B3 = Yes/No
-C3 = (ঐচ্ছিক Image URL)
-D3 = (ঐচ্ছিক Click URL)
-E3 = (ঐচ্ছিক Title)
-F3 = (ঐচ্ছিক Ad Code)
+উদাহরণ:
+TOP → Company A
+MIDDLE TOP → Company B
+MIDDLE BOTTOM → Company C
+BOTTOM → Company D
 
-A4 = BOTTOM
-B4 = Yes/No
-C4 = (ঐচ্ছিক Image URL)
-D4 = (ঐচ্ছিক Click URL)
-E4 = (ঐচ্ছিক Title)
-F4 = (ঐচ্ছিক Ad Code)
+Image URL ও Click URL প্রতিটি row অনুযায়ী আলাদাভাবে কাজ করবে। Ad Code থাকলে সেটিই অগ্রাধিকার পাবে।
 
-একই Position-এর একাধিক row রাখা যাবে।
-- ৩-slot পেজে: TOP + MIDDLE + BOTTOM
-- ৪-slot পেজে: TOP + MIDDLE TOP + MIDDLE BOTTOM + BOTTOM; দুই MIDDLE row থাকলে দুই জায়গায় দুই আলাদা ad চলবে।
-- ২-slot পেজে: TOP + BOTTOM
-- একই ad তিন জায়গায় চালাতে চাইলে সেই ad-এর তথ্য/Ad Code TOP, MIDDLE ও BOTTOM row-তে একইভাবে দিন।
-- তিন জায়গায় আলাদা কোম্পানির ad চাইলে তিন row-তে আলাদা Image URL, Click URL, Title বা Ad Code দিন।
-- Image URL ও Click URL প্রতিটি row অনুযায়ী আলাদাভাবে কাজ করবে।
-- কোনো position-এর জন্য একাধিক row থাকলেও slot কম হলে প্রথম active ad ব্যবহার হবে।
+গুরুত্বপূর্ণ: Exact position-এর ad থাকলে সেটিই আগে ব্যবহার হবে। কোনো exact position খালি থাকলে ALL row-এর ad ব্যবহার হবে। দুইটি middle slot থাকলে MIDDLE TOP ও MIDDLE BOTTOM আলাদাভাবে কাজ করবে।
 
-শুধু এই Ads tab-এ code পরিবর্তন করলেই হবে। বিজ্ঞাপনের জন্য HTML ফাইল বারবার GitHub-এ আপডেট করতে হবে না। TOP, MIDDLE এবং BOTTOM slot একই প্রস্থ/উচ্চতার responsive container ব্যবহার করবে।
+শুধু এই Ads tab-এ code/URL পরিবর্তন করলেই হবে। বিজ্ঞাপনের জন্য HTML ফাইল বারবার GitHub-এ আপডেট করতে হবে না।
 
 গুরুত্বপূর্ণ:
 - Google Spreadsheet-টি অবশ্যই এমনভাবে Share/Publish করতে হবে যাতে ওয়েবসাইট সেটি পড়তে পারে।
@@ -69,7 +73,7 @@ F4 = (ঐচ্ছিক Ad Code)
 ================ এই ZIP-এর সর্বশেষ আপডেট ================
 ১) index.html-এর “সর্বশেষ সংবাদ” এখন Google Sheet-এর সর্বশেষ ১০টি শিরোনামই ধারাবাহিকভাবে দেখাবে (নতুনটি আগে)।
 ২) প্রতিটি শিরোনামে ক্লিক করলে home.html-এ সেই ID-র সংবাদ খুলে/ফোকাস হয়ে সরাসরি সেই সংবাদে স্ক্রল করবে।
-৩) Ads loader এখন shared ads-loader.js; তাই একই Ads tab থেকে TOP/MIDDLE/BOTTOM বিজ্ঞাপন সব পেজে পড়বে।
-৪) TOP, MIDDLE এবং BOTTOM ad slot-এর container একই responsive প্রস্থ/উচ্চতার নিয়মে সেট করা হয়েছে।
-৫) HTML ফাইল বারবার ad code দিয়ে সম্পাদনা করার দরকার নেই; Ads tab-এর B কলামে code বদলালেই পরের page load-এ নতুন code নেওয়া হবে।
+৩) Ads loader এখন shared ads-loader.js; তাই একই Ads tab থেকে প্রতিটি পেজের নির্ধারিত ad position অনুযায়ী বিজ্ঞাপন পড়বে।
+৪) ৪-slot Details/news page-এ TOP → MIDDLE TOP → MIDDLE BOTTOM → BOTTOM; ৩-slot index-এ TOP → MIDDLE → BOTTOM; ২-slot page-এ TOP → BOTTOM।
+৫) HTML ফাইল বারবার ad code দিয়ে সম্পাদনা করার দরকার নেই; Ads tab-এর Active/Ad Code/URL বদলালেই পরের page load-এ নতুন code নেওয়া হবে।
 ==========================================================
