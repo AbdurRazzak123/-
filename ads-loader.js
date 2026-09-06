@@ -60,15 +60,11 @@ function makeAdFrame(code,title){
   const tpl=document.createElement('template');
   tpl.innerHTML=String(code||'');
   const nodes=Array.from(tpl.content.childNodes);
-  // Non-script markup is prepared now. Scripts are recreated only after the
-  // wrapper is attached to the real page, preserving original order.
-  nodes.forEach(node=>{
-    if(!(node.nodeType===1 && node.tagName.toLowerCase()==='script')){
-      canvas.appendChild(node.cloneNode(true));
-    }
-  });
-  const scripts=nodes.filter(n=>n.nodeType===1 && n.tagName.toLowerCase()==='script');
-  wrap._adScripts=scripts;
+  // IMPORTANT: recreate every node in the exact original order AFTER the
+  // wrapper is attached to the live document. The supplied Native Banner
+  // code has the external script BEFORE its container div; changing that
+  // order can make the provider fail to initialize.
+  wrap._adNodes=nodes;
   wrap._adCanvas=canvas;
   wrap._adDesignWidth=DESIGN_WIDTH;
   wrap._adDefaultHeight=DEFAULT_HEIGHT;
@@ -76,16 +72,22 @@ function makeAdFrame(code,title){
 }
 function activateAdFrame(wrap){
   const canvas=wrap&&wrap._adCanvas;
-  const nodes=wrap&&wrap._adScripts||[];
+  const nodes=wrap&&wrap._adNodes||[];
   if(!canvas||wrap._adActivated)return;
   wrap._adActivated=true;
-  // Execute scripts in exactly the same order as supplied by the advertiser.
+  // Execute/recreate nodes in EXACTLY the same order as the supplied code.
+  // This is essential for Native Banner snippets whose invoke.js script must
+  // appear before the provider's container element.
   nodes.forEach(node=>{
-    const sc=document.createElement('script');
-    for(const attr of Array.from(node.attributes))sc.setAttribute(attr.name,attr.value);
-    if(node.src || node.getAttribute('src')) sc.src=node.getAttribute('src');
-    else sc.textContent=node.textContent||'';
-    canvas.appendChild(sc);
+    if(node.nodeType===1 && node.tagName.toLowerCase()==='script'){
+      const sc=document.createElement('script');
+      for(const attr of Array.from(node.attributes))sc.setAttribute(attr.name,attr.value);
+      if(node.src || node.getAttribute('src')) sc.src=node.getAttribute('src');
+      else sc.textContent=node.textContent||'';
+      canvas.appendChild(sc);
+    }else{
+      canvas.appendChild(node.cloneNode(true));
+    }
   });
   const DESIGN_WIDTH=wrap._adDesignWidth||1200;
   const DEFAULT_HEIGHT=wrap._adDefaultHeight||300;
@@ -236,6 +238,12 @@ async function load(){
       }
       if(ad && render(slot,ad)){
         if(ad.code)usedCodes.add(ad.code);
+      }else if(i===0 || slots.length===1){
+        // If the Sheet is reachable but currently has no usable ad row for
+        // this page, still show the user's current Native Banner rather than
+        // leaving a blank advertising area.
+        render(slot,{code:FALLBACK_NATIVE_CODE,title:'Advertisement'});
+        slot.setAttribute('data-ad-fallback','native-no-sheet-ad');
       }else{
         slot.setAttribute('data-ad-loaded','no-ad');
       }
